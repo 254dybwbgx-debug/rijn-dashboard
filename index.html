@@ -864,11 +864,13 @@ function buildMaxDraftChart() {
     data: {
       datasets: [
         // Achtergrondlijnen per station
-        { label: 'Kaub +100cm',    data: kaubPts,  borderColor: '#378ADD', borderWidth: 1.5, borderDash:[4,3], pointRadius: 0, tension: 0.3, parsing: false, backgroundColor:'transparent', fill:false },
-        { label: 'Maxau −180cm',   data: maxauPts, borderColor: '#1D9E75', borderWidth: 1.5, borderDash:[4,3], pointRadius: 0, tension: 0.3, parsing: false, backgroundColor:'transparent', fill:false },
-        { label: 'Duisburg TuGLW', data: duisPts,  borderColor: '#D85A30', borderWidth: 1.5, borderDash:[4,3], pointRadius: 0, tension: 0.3, parsing: false, backgroundColor:'transparent', fill:false },
-        // Minimum = echte max diepgang
-        { label: 'Max diepgang',   data: minPts,   borderColor: '#f0d060', borderWidth: 3,   pointRadius: 0, tension: 0.3, parsing: false, backgroundColor:'rgba(240,208,96,.08)', fill:'origin' },
+        { label: 'Kaub +100cm',    data: kaubPts,  borderColor: '#378ADD', borderWidth: 1, borderDash:[4,3], pointRadius: 0, tension: 0.3, parsing: false, backgroundColor:'transparent', fill:false },
+        { label: 'Maxau −180cm',   data: maxauPts, borderColor: '#1D9E75', borderWidth: 1, borderDash:[4,3], pointRadius: 0, tension: 0.3, parsing: false, backgroundColor:'transparent', fill:false },
+        { label: 'Duisburg TuGLW', data: duisPts,  borderColor: '#D85A30', borderWidth: 1, borderDash:[4,3], pointRadius: 0, tension: 0.3, parsing: false, backgroundColor:'transparent', fill:false },
+        // Minimum historisch (solid)
+        { label: 'Max diepgang',   data: minPts.filter(p => p.x <= nowMs), borderColor: '#f0d060', borderWidth: 3, pointRadius: 0, tension: 0.3, parsing: false, backgroundColor:'transparent', fill:false },
+        // Minimum prognose (stippellijn)
+        { label: 'Max diepgang prognose', data: [minPts.filter(p => p.x <= nowMs).at(-1), ...minPts.filter(p => p.x > nowMs)].filter(Boolean), borderColor: '#f0d060', borderWidth: 3, borderDash:[8,4], pointRadius: 0, tension: 0.3, parsing: false, backgroundColor:'transparent', fill:false },
         // Nu-lijn
         { label: '_now', data: [{x:nowMs,y:minY},{x:nowMs,y:maxY}], borderColor:'rgba(255,255,255,.2)', borderWidth:1, borderDash:[4,3], pointRadius:0, parsing:false, backgroundColor:'transparent', fill:false }
       ]
