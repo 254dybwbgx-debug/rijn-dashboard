@@ -916,7 +916,7 @@ function buildMaxDraftChart() {
 function renderChart() {
   // Bereken gemeenschappelijke X-as: 7 dagen terug t/m einde WSV-prognose (Kaub+Duisburg)
   const nowMs = Date.now();
-  const xMin = nowMs - 7 * 86400000;
+  const xMin = nowMs - 2 * 86400000;
   let xMax = nowMs + 4 * 86400000; // fallback: 4 dagen vooruit
   ['KAUB','DUISBURG-RUHRORT'].forEach(id => {
     const fc = fcData[id];
