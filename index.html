@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rijn Waterstanden</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Thema-variabelen ───────────────────────────────── */
+    :root {
+      --bg:          #111317;
+      --bg-card:     #1a1d24;
+      --bg-card2:    #161920;
+      --bg-btn:      #1e2128;
+      --bg-btn-h:    #2a2d34;
+      --bg-input:    #111317;
+      --border:      #22252c;
+      --border2:     #2a2d34;
+      --border3:     #2e3138;
+      --text:        #e2e2df;
+      --text-h:      #f0f0ee;
+      --text-muted:  #888;
+      --text-dim:    #555;
+      --text-dimmer: #444;
+      --text-foot:   #3a3d44;
+      --bar-bg:      #2a2d34;
+      --section-ttl: #c0c0bc;
+      --grid:        rgba(255,255,255,.05);
+      --axis-border: rgba(255,255,255,.08);
+      --tick:        #555;
+      --tooltip-bg:  #0e1014;
+      --tooltip-bd:  #2e3138;
+      --tooltip-ttl: #aaa;
+      --card-glow:   rgba(255,255,255,.015);
+      --badge-st-bg: rgba(255,255,255,.06);
+      --badge-st-cl: #888;
+      --mode-hover:  #22252c;
+    }
+
+    body.light {
+      --bg:          #f0f2f5;
+      --bg-card:     #ffffff;
+      --bg-card2:    #f5f7fa;
+      --bg-btn:      #e8ecf2;
+      --bg-btn-h:    #dde2ea;
+      --bg-input:    #f5f7fa;
+      --border:      #dde2ea;
+      --border2:     #d0d5de;
+      --border3:     #c4cad5;
+      --text:        #1a1d24;
+      --text-h:      #0a0c10;
+      --text-muted:  #777;
+      --text-dim:    #666;
+      --text-dimmer: #888;
+      --text-foot:   #bbb;
+      --bar-bg:      #dde2ea;
+      --section-ttl: #333;
+      --grid:        rgba(0,0,0,.06);
+      --axis-border: rgba(0,0,0,.1);
+      --tick:        #888;
+      --tooltip-bg:  #ffffff;
+      --tooltip-bd:  #dde2ea;
+      --tooltip-ttl: #666;
+      --card-glow:   rgba(0,0,0,.02);
+      --badge-st-bg: rgba(0,0,0,.06);
+      --badge-st-cl: #666;
+      --mode-hover:  #edf0f5;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+      transition: background .25s, color .25s;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px 20px 28px;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border2);
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header-icon { font-size: 24px; line-height: 1; }
+    .header h1   { font-size: 20px; font-weight: 700; color: var(--text-h); letter-spacing: -.3px; }
+    .header p    { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .header-btns { display: flex; gap: 8px; align-items: center; }
+
+    .btn {
+      background: var(--bg-btn);
+      border: 1px solid var(--border3);
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: background .15s, color .15s;
+    }
+    .btn:hover { background: var(--bg-btn-h); color: var(--text); }
+
+    .theme-btn {
+      background: var(--bg-btn);
+      border: 1px solid var(--border3);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 15px;
+      cursor: pointer;
+      line-height: 1;
+      transition: background .15s;
+    }
+    .theme-btn:hover { background: var(--bg-btn-h); }
+
+    /* ── Station cards ──────────────────────────────────── */
+    .cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 12px; }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 12px 16px;
+      border-left: 4px solid #ccc;
+      position: relative;
+      overflow: hidden;
+      transition: background .25s;
+    }
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 60%;
+      background: linear-gradient(90deg, transparent, var(--card-glow));
+      pointer-events: none;
+    }
+
+    .card-label { font-size: 10px; text-transform: uppercase; letter-spacing: .09em; color: var(--text-dim); margin-bottom: 4px; }
+    .card-value { font-size: 32px; font-weight: 700; line-height: 1; letter-spacing: -1px; }
+    .card-unit  { font-size: 15px; font-weight: 400; color: var(--text-muted); }
+    .card-sub   { font-size: 11px; color: var(--text-dim); margin-top: 5px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      margin-top: 6px;
+    }
+    .badge-up { background: rgba(185,28,28,.18); color: #f87171; }
+    .badge-dn { background: rgba(21,128,61,.18);  color: #4ade80; }
+    .badge-st { background: var(--badge-st-bg); color: var(--badge-st-cl); }
+
+    .bar-wrap { height: 3px; background: var(--bar-bg); border-radius: 2px; margin-top: 12px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 2px; transition: width .5s ease; }
+    .bar-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-dimmer); margin-top: 4px; }
+
+    /* ── Chart section ──────────────────────────────────── */
+    .chart-section {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      transition: background .25s;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .chart-title-group { display: flex; align-items: baseline; gap: 10px; }
+    .chart-title { font-size: 15px; font-weight: 700; }
+    .chart-subtitle { font-size: 11px; color: var(--text-dim); }
+
+    .chart-legend { display: flex; gap: 16px; flex-wrap: wrap; }
+    .legend-item  { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); }
+    .leg-line     { width: 20px; height: 2px; border-radius: 1px; }
+    .leg-dash     { width: 20px; height: 0; border-top: 2px dashed currentColor; }
+    .leg-band     { width: 20px; height: 10px; border-radius: 3px; opacity: .45; }
+
+    .chart-wrap { position: relative; width: 100%; height: 240px; }
+
+    /* ── Draft/laad section ─────────────────────────────── */
+    .section {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+      transition: background .25s;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-title { font-size: 13px; font-weight: 700; color: var(--section-ttl); letter-spacing: -.2px; }
+
+    .mode-toggle {
+      display: flex;
+      border: 1px solid var(--border3);
+      border-radius: 8px;
+      overflow: hidden;
+      width: fit-content;
+      margin-bottom: 14px;
+    }
+    .mode-btn {
+      padding: 7px 18px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .mode-btn.active   { background: #378ADD; color: #fff; }
+    .mode-btn.inactive { background: transparent; color: var(--text-dim); }
+    .mode-btn.inactive:hover { background: var(--mode-hover); color: var(--text-muted); }
+
+    .draft-grid { display: grid; grid-template-columns: 240px 1fr; gap: 28px; align-items: start; }
+
+    label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 6px; }
+
+    input[type=range] { width: 100%; accent-color: #378ADD; margin-bottom: 8px; }
+
+    .draft-inputs { display: flex; align-items: center; gap: 10px; }
+    .draft-inputs input[type=number] {
+      width: 80px;
+      padding: 7px 10px;
+      border: 1px solid var(--border3);
+      border-radius: 7px;
+      font-size: 14px;
+      background: var(--bg-input);
+      color: var(--text);
+    }
+    .draft-display { font-size: 18px; font-weight: 700; margin-left: auto; color: var(--text); }
+
+    .auto-draft-box {
+      margin-top: 16px;
+      padding: 14px 16px;
+      background: rgba(55,138,221,.08);
+      border-radius: 10px;
+      border-left: 3px solid #378ADD;
+    }
+    .auto-draft-box .sub { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
+    .auto-draft-val  { font-size: 30px; font-weight: 700; color: #378ADD; line-height: 1; }
+    .auto-draft-meta { font-size: 11px; color: var(--text-dim); margin-top: 5px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      padding: 6px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+    }
+    tbody td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--mode-hover); }
+
+    .ok   { color: #16a34a; font-weight: 600; }
+    .warn { color: #d97706; font-weight: 600; }
+    .bad  { color: #dc2626; font-weight: 600; }
+    body.light .ok  { color: #15803d; }
+    body.light .warn{ color: #b45309; }
+    body.light .bad { color: #b91c1c; }
+    .status-icon { margin-right: 4px; }
+
+    /* ── Footer ─────────────────────────────────────────── */
+    .footer { font-size: 11px; color: var(--text-foot); margin-top: 20px; line-height: 1.8; }
+    .footer a { color: var(--text-foot); }
+
+    /* ── Misc ───────────────────────────────────────────── */
+    .error-box {
+      background: rgba(185,28,28,.12);
+      border: 1px solid rgba(220,38,38,.3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #dc2626;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .loading { text-align: center; padding: 40px; color: var(--text-dimmer); font-size: 13px; }
+
+    @media (max-width: 800px) {
+      .cards { grid-template-columns: 1fr; }
+      .draft-grid { grid-template-columns: 1fr; }
+      .chart-legend { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ── Header ───────────────────────────────────────── -->
+  <div class="header">
+    <div class="header-left">
+      <span class="header-icon">⚓</span>
+      <div>
+        <h1>Rijn Waterstanden</h1>
+        <p>Kaub &middot; Maxau &middot; Duisburg-Ruhrort &nbsp;&mdash;&nbsp; <span id="ts">laden&hellip;</span></p>
+      </div>
+    </div>
+    <div class="header-btns">
+      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Wissel thema">🌙</button>
+      <button class="btn" onclick="init()">&#x21BB;&nbsp; Vernieuwen</button>
+    </div>
+  </div>
+
+  <div id="errmsg" class="error-box"></div>
+
+  <!-- ── Live peilen ──────────────────────────────────── -->
+  <div class="cards" id="cards">
+    <div class="loading" style="grid-column:1/-1">Waterstanden ophalen&hellip;</div>
+  </div>
+
+  <!-- ── Rij 1: Max Laaddiepgang + Kaub ──────────────── -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+
+    <div class="chart-section" style="border-color:#3a3020;margin-bottom:0;">
+      <div class="chart-header">
+        <div class="chart-title-group">
+          <span class="chart-title" style="color:#f0d060;">Max Laaddiepgang</span>
+          <span class="chart-subtitle">Meest beperkend van de drie</span>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="leg-line" style="background:#f0d060;height:3px;"></span>Max</span>
+          <span class="legend-item"><span class="leg-line" style="background:#378ADD;opacity:.5;"></span>Kaub</span>
+          <span class="legend-item"><span class="leg-line" style="background:#1D9E75;opacity:.5;"></span>Maxau</span>
+          <span class="legend-item"><span class="leg-line" style="background:#D85A30;opacity:.5;"></span>Duis.</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+        <div style="background:rgba(240,208,96,.08);border:1px solid rgba(240,208,96,.2);border-radius:7px;padding:6px 14px;display:flex;align-items:baseline;gap:5px;white-space:nowrap;">
+          <span style="font-size:10px;color:var(--text-muted);">Nu</span>
+          <span style="font-size:22px;font-weight:700;color:#f0d060;" id="maxdraft-now">—</span>
+          <span style="font-size:11px;color:var(--text-dim);">m</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);line-height:1.6;" id="maxdraft-breakdown">—</div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-maxdraft"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-section" style="margin-bottom:0;">
+      <div class="chart-header">
+        <div class="chart-title-group">
+          <span class="chart-title" style="color:#378ADD;">Kaub</span>
+          <span class="chart-subtitle">7d meting · 4d WSV-prognose</span>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="leg-line" style="background:#378ADD;"></span>Meting</span>
+          <span class="legend-item"><span class="leg-dash" style="color:#378ADD;"></span>WSV 4d</span>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-KAUB"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Rij 2: Maxau + Duisburg ──────────────────────── -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+
+    <div class="chart-section" style="margin-bottom:0;">
+      <div class="chart-header">
+        <div class="chart-title-group">
+          <span class="chart-title" style="color:#1D9E75;">Maxau</span>
+          <span class="chart-subtitle">7d meting · HVZ prognose t/m 27 jun · <span style="color:#f0a000;" id="hvz-fc-date"></span></span>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="leg-line" style="background:#1D9E75;"></span>Meting</span>
+          <span class="legend-item"><span class="leg-dash" style="color:#1D9E75;"></span>HVZ prognose</span>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-MAXAU" style="position:absolute;top:0;left:0;"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-section" style="margin-bottom:0;">
+      <div class="chart-header">
+        <div class="chart-title-group">
+          <span class="chart-title" style="color:#D85A30;">Duisburg-Ruhrort</span>
+          <span class="chart-subtitle">7d meting · 4d WSV-prognose</span>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="leg-line" style="background:#D85A30;"></span>Meting</span>
+          <span class="legend-item"><span class="leg-dash" style="color:#D85A30;"></span>WSV 4d</span>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-DUISBURG-RUHRORT"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Laadprofiel ──────────────────────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">⚓ Laadprofiel &amp; vaarstatus</span>
+    </div>
+
+    <div class="mode-toggle">
+      <button id="btn-auto" class="mode-btn active" onclick="setMode('auto')">
+        Automatisch &mdash; Kaub + opslag
+      </button>
+      <button id="btn-manual" class="mode-btn inactive" onclick="setMode('manual')">
+        Vaste diepgang
+      </button>
+    </div>
+
+    <!-- AUTO -->
+    <div id="pane-auto">
+      <div class="draft-grid">
+        <div>
+          <label>Opslag bovenop Kaub-peil (cm)</label>
+          <input type="range" id="offset-slider" min="50" max="200" step="5" value="100"
+            oninput="setOffset(+this.value,'s')">
+          <div class="draft-inputs">
+            <input type="number" id="offset-inp" min="50" max="200" step="5" value="100"
+              oninput="setOffset(+this.value,'i')">
+            <span style="color:#555;font-size:12px;">cm opslag</span>
+            <span class="draft-display" id="offset-dv">100 cm</span>
+          </div>
+          <div class="auto-draft-box">
+            <div class="sub">Berekende laaddiepgang</div>
+            <div class="auto-draft-val" id="auto-draft-display">—</div>
+            <div class="auto-draft-meta" id="auto-draft-sub">
+              Kaub <span id="auto-kaub">—</span> cm + <span id="auto-offset">100</span> cm
+            </div>
+          </div>
+          <p style="font-size:11px;color:#444;margin-top:12px;line-height:1.6;">
+            Diepgang volgt automatisch het Kaub-peil.<br>
+            Indicatief — raadpleeg ELWIS voor exacte vaardiepten.
+          </p>
+        </div>
+        <div>
+          <table>
+            <thead>
+              <tr>
+                <th>Station</th>
+                <th>Vaardiepte</th>
+                <th>Diepgang</th>
+                <th>Speling</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dtbody-auto">
+              <tr><td colspan="5" style="color:#444">Data laden&hellip;</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MANUAL -->
+    <div id="pane-manual" style="display:none;">
+      <div class="draft-grid">
+        <div>
+          <label>Vaste diepgang (meter)</label>
+          <input type="range" id="slider" min="0.5" max="4.0" step="0.05" value="2.5"
+            oninput="setDraft(+this.value,'s')">
+          <div class="draft-inputs">
+            <input type="number" id="inp" min="0.5" max="4.5" step="0.05" value="2.50"
+              oninput="setDraft(+this.value,'i')">
+            <span style="color:#555;font-size:12px;">meter</span>
+            <span class="draft-display" id="dv">2.50 m</span>
+          </div>
+          <p style="font-size:11px;color:#444;margin-top:12px;line-height:1.6;">
+            Vaardiepte = TuGLW + (peil &minus; GlW) &divide; 100<br>
+            Indicatief — raadpleeg ELWIS voor exacte waarden.
+          </p>
+        </div>
+        <div>
+          <table>
+            <thead>
+              <tr>
+                <th>Station</th>
+                <th>Vaardiepte</th>
+                <th>Speling</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dtbody">
+              <tr><td colspan="4" style="color:#444">Data laden&hellip;</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer">
+    Bron: <a href="https://www.pegelonline.wsv.de" target="_blank">Pegelonline WSV</a> &nbsp;&middot;&nbsp;
+    Prognose (Kaub &amp; Duisburg): WSV 4-daagse meting &nbsp;&middot;&nbsp;
+    Maxau: alleen meetdata, geen prognose beschikbaar &nbsp;&middot;&nbsp;
+    GlW: Kaub 77 cm &middot; Maxau 372 cm &middot; Duisburg 227 cm &nbsp;&middot;&nbsp;
+    Auto-refresh elke 15 minuten
+  </p>
+
+</div>
+
+<script>
+const ST = [
+  { id:'KAUB',             name:'Kaub',     color:'#378ADD', glw:77,  tuglw:190, hsw:640,  hasFc:true  },
+  { id:'MAXAU',            name:'Maxau',    color:'#1D9E75', glw:372, tuglw:210, hsw:750,  hasFc:false },
+  { id:'DUISBURG-RUHRORT', name:'Duisburg', color:'#D85A30', glw:227, tuglw:280, hsw:1130, hasFc:true  }
+];
+
+const BASE = 'https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations';
+
+let histData = {};
+let fcData   = {};
+let currData = {};
+let draft = 2.50;
+let offsetCm = 100;
+let mode = 'auto';
+
+// HVZ Maxau prognose — afgelezen uit HVZ-grafiek op 17 jun 2026 10:34
+// Rood = Vorhersage, Geel = Abschätzung der weiteren Tendenz
+const hvzMaxauFc = [
+  { x: new Date('2026-06-17T16:00:00Z').getTime(), y: 413 },
+  { x: new Date('2026-06-18T10:00:00Z').getTime(), y: 407 },
+  { x: new Date('2026-06-19T10:00:00Z').getTime(), y: 404 },
+  { x: new Date('2026-06-20T10:00:00Z').getTime(), y: 402 },
+  { x: new Date('2026-06-21T10:00:00Z').getTime(), y: 400 },
+  { x: new Date('2026-06-23T10:00:00Z').getTime(), y: 398 },
+  { x: new Date('2026-06-25T10:00:00Z').getTime(), y: 396 },
+  { x: new Date('2026-06-27T10:00:00Z').getTime(), y: 393 },
+];
+const hvzMaxauFcDate = '17 jun 2026 10:34';
+
+function downsample(arr, target) {
+  if (!arr || arr.length === 0) return [];
+  if (arr.length <= target) return arr;
+  const step = Math.floor(arr.length / target);
+  const out = [];
+  for (let i = 0; i < arr.length; i += step) out.push(arr[i]);
+  if (out[out.length - 1] !== arr[arr.length - 1]) out.push(arr[arr.length - 1]);
+  return out;
+}
+
+async function loadAll() {
+  const [hRes, cRes] = await Promise.all([
+    Promise.all(ST.map(s => fetch(`${BASE}/${s.id}/W/measurements.json?start=P7D`).then(r => r.json()))),
+    Promise.all(ST.map(s => fetch(`${BASE}/${s.id}/W/currentmeasurement.json`).then(r => r.json())))
+  ]);
+
+  const fcST = ST.filter(s => s.hasFc);
+  const fRes = await Promise.all(fcST.map(s => fetch(`${BASE}/${s.id}/WV/measurements.json`).then(r => r.json())));
+
+  ST.forEach((s, i) => { histData[s.id] = hRes[i]; currData[s.id] = cRes[i]; });
+  fcST.forEach((s, i) => { fcData[s.id] = fRes[i]; });
+}
+
+function getTrend(arr) {
+  if (!arr || arr.length < 24) return 0;
+  return arr[arr.length - 1].value - arr[Math.max(0, arr.length - 24)].value;
+}
+
+function renderCards() {
+  const el = document.getElementById('cards');
+  el.innerHTML = '';
+  ST.forEach(s => {
+    const curr = currData[s.id];
+    const hist = histData[s.id];
+    if (!curr) return;
+    const lvl  = curr.value;
+    const tr   = getTrend(hist);
+    const diff = lvl - s.glw;
+    const pct  = Math.min(100, Math.max(0, (lvl / s.hsw) * 100));
+
+    const bcl = tr > 8 ? 'badge-up' : tr < -8 ? 'badge-dn' : 'badge-st';
+    const btx = tr > 8 ? `&#9650; +${Math.round(tr)} cm/dag` :
+                tr < -8 ? `&#9660; ${Math.round(tr)} cm/dag` : '&#9644; Stabiel';
+
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.borderTopColor = s.color;
+    // Max diepgang per station
+    let maxDraft, maxDraftLabel;
+    if (s.id === 'KAUB') {
+      maxDraft = (lvl + 100) / 100;
+      maxDraftLabel = `(${Math.round(lvl)} + 100) / 100`;
+    } else if (s.id === 'MAXAU') {
+      maxDraft = (lvl - 180) / 100;
+      maxDraftLabel = `(${Math.round(lvl)} − 180) / 100`;
+    } else {
+      maxDraft = 2.80 + (lvl - 227) / 100;
+      maxDraftLabel = `TuGLW + (${Math.round(lvl)} − 227) / 100`;
+    }
+
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="card-label">${s.name}</div>
+          <div class="card-value" style="color:${s.color};">${Math.round(lvl)}<span class="card-unit"> cm</span></div>
+          <span class="badge ${bcl}">${btx}</span>
+          <div class="card-sub">GlW ${s.glw} cm &nbsp;&middot;&nbsp; ${diff >= 0 ? '+' : ''}${Math.round(diff)} cm t.o.v. GlW</div>
+        </div>
+        <div style="text-align:right;padding-left:12px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#555;margin-bottom:4px;">Max diepgang</div>
+          <div style="font-size:26px;font-weight:700;color:${s.color};line-height:1;">${maxDraft.toFixed(2)}<span style="font-size:13px;font-weight:400;color:#555;"> m</span></div>
+          <div style="font-size:10px;color:#3a3d44;margin-top:3px;">${maxDraftLabel}</div>
+        </div>
+      </div>
+      <div class="bar-wrap" style="margin-top:12px;">
+        <div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${s.color};"></div>
+      </div>
+      <div class="bar-labels"><span>GlW</span><span>HSW ${s.hsw} cm</span></div>`;
+    el.appendChild(div);
+  });
+}
+
+let chartInsts = {};
+
+function buildChart(s) {
+  if (chartInsts[s.id]) { chartInsts[s.id].destroy(); }
+  const canvas = document.getElementById('chart-' + s.id);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const nowMs = Date.now();
+
+  const raw     = histData[s.id] || [];
+  const histPts = downsample(raw, 84).map(p => ({ x: new Date(p.timestamp).getTime(), y: p.value }));
+  const allY    = histPts.map(p => p.y);
+  const datasets = [];
+
+  // ── 1. Meetdata (7 dagen) ──
+  datasets.push({
+    label: s.name,
+    data: histPts,
+    borderColor: s.color,
+    backgroundColor: 'transparent',
+    fill: false,
+    borderWidth: 2,
+    pointRadius: 0,
+    tension: 0.3,
+    parsing: false
+  });
+
+  // ── 2. Korte termijn WSV prognose (4 dagen, Kaub & Duisburg) ──
+  if (s.hasFc && fcData[s.id] && fcData[s.id].length > 0) {
+    const fpts = fcData[s.id].map(p => ({ x: new Date(p.timestamp).getTime(), y: p.value }));
+    fpts.forEach(p => allY.push(p.y));
+    datasets.push({
+      label: s.name + ' 4d prognose',
+      data: fpts,
+      borderColor: s.color,
+      backgroundColor: 'transparent',
+      fill: false,
+      borderWidth: 2,
+      borderDash: [8, 4],
+      pointRadius: 0,
+      tension: 0.3,
+      parsing: false
+    });
+  }
+
+  // ── 2b. HVZ Maxau prognose (visueel afgelezen) ──
+  if (s.id === 'MAXAU' && hvzMaxauFc.length > 0) {
+    const curr = currData['MAXAU'];
+    const bridge = curr ? [{ x: nowMs, y: curr.value }] : [];
+    const fcPts = [...bridge, ...hvzMaxauFc.filter(p => p.x > nowMs)];
+    fcPts.forEach(p => allY.push(p.y));
+    datasets.push({
+      label: 'Maxau HVZ prognose',
+      data: fcPts,
+      borderColor: s.color,
+      backgroundColor: 'transparent',
+      fill: false,
+      borderWidth: 2,
+      borderDash: [8, 4],
+      pointRadius: [0, ...fcPts.slice(1).map(() => 4)],
+      pointStyle: 'circle',
+      tension: 0.3,
+      parsing: false
+    });
+  }
+
+  const pad  = Math.max((Math.max(...allY) - Math.min(...allY)) * 0.10, 10);
+  const minY = Math.min(...allY) - pad;
+  const maxY = Math.max(...allY) + pad;
+
+  // "Nu"-lijn
+  datasets.push({
+    label: '_now',
+    data: [{ x: nowMs, y: minY }, { x: nowMs, y: maxY }],
+    borderColor: 'rgba(255,255,255,.2)',
+    backgroundColor: 'transparent',
+    fill: false,
+    borderWidth: 1,
+    borderDash: [4, 3],
+    pointRadius: 0,
+    parsing: false
+  });
+
+  chartInsts[s.id] = new Chart(ctx, {
+    type: 'line',
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: chartTooltipBg(),
+          borderColor: chartTooltipBd(),
+          borderWidth: 1,
+          titleColor: chartTooltipTtl(),
+          bodyColor: chartTooltipTxt(),
+          padding: 10,
+          filter: item => !item.dataset.label.startsWith('_'),
+          callbacks: {
+            title: items => {
+              if (!items.length) return '';
+              const d = new Date(items[0].parsed.x);
+              return d.toLocaleString('nl-NL', {
+                weekday: 'short', day: 'numeric', month: 'short',
+                hour: '2-digit', minute: '2-digit'
+              });
+            },
+            label: item => `  ${item.dataset.label}: ${Math.round(item.parsed.y)} cm`
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          min: window._chartXMin,
+          max: window._chartXMax,
+          grid: { color: chartGrid() },
+          border: { color: chartAxis() },
+          ticks: {
+            color: chartTick(), font: { size: 11 }, maxTicksLimit: 10,
+            callback: val => new Date(val).toLocaleDateString('nl-NL', { day:'numeric', month:'short' })
+          }
+        },
+        y: {
+          min: minY, max: maxY,
+          grid: { color: chartGrid() },
+          border: { color: chartAxis() },
+          ticks: { color: chartTick(), font:{size:11}, maxTicksLimit:6, callback: v => Math.round(v)+' cm' }
+        }
+      }
+    }
+  });
+}
+
+function buildMaxDraftChart() {
+  if (chartInsts['maxdraft']) chartInsts['maxdraft'].destroy();
+  const canvas = document.getElementById('chart-maxdraft');
+  if (!canvas) return;
+
+  const nowMs = Date.now();
+
+  // Kaub: (peil + 100) / 100 m
+  const kaubPts = [
+    ...(histData['KAUB'] || []).map(p => ({ x: new Date(p.timestamp).getTime(), y: (p.value + 100) / 100 })),
+    ...(fcData['KAUB']   || []).map(p => ({ x: new Date(p.timestamp).getTime(), y: (p.value + 100) / 100 }))
+  ];
+
+  // Maxau: (peil - 180) / 100 m — history + HVZ prognose
+  const maxauHist = (histData['MAXAU'] || []).map(p => ({
+    x: new Date(p.timestamp).getTime(),
+    y: (p.value - 180) / 100
+  }));
+  const maxauFcPts = hvzMaxauFc.filter(p => p.x > nowMs).map(p => ({
+    x: p.x, y: (p.y - 180) / 100
+  }));
+  const maxauPts = [...maxauHist, ...maxauFcPts];
+
+  // Duisburg: TuGLW + (peil - GlW) / 100 m
+  const duisPts = [
+    ...(histData['DUISBURG-RUHRORT'] || []).map(p => ({ x: new Date(p.timestamp).getTime(), y: 2.80 + (p.value - 227) / 100 })),
+    ...(fcData['DUISBURG-RUHRORT']   || []).map(p => ({ x: new Date(p.timestamp).getTime(), y: 2.80 + (p.value - 227) / 100 }))
+  ];
+
+  // Minimum (meest kritisch) per tijdstip — op basis van Kaub tijdlijn
+  // Interpoleer Maxau en Duisburg waarden op elk Kaub tijdstip
+  function interpolate(pts, atX) {
+    if (!pts.length) return null;
+    // Zoek omliggende punten
+    let lo = null, hi = null;
+    for (const p of pts) {
+      if (p.x <= atX) lo = p;
+      else if (!hi) { hi = p; break; }
+    }
+    if (!lo) return pts[0].y;
+    if (!hi) return lo.y;
+    const t = (atX - lo.x) / (hi.x - lo.x);
+    return lo.y + t * (hi.y - lo.y);
+  }
+
+  const minPts = kaubPts.map(p => {
+    const k = p.y;
+    const m = interpolate(maxauPts, p.x);
+    const d = interpolate(duisPts, p.x);
+    const vals = [k, d].filter(v => v !== null);
+    if (m !== null) vals.push(m);
+    return { x: p.x, y: Math.min(...vals) };
+  });
+
+  // Huidige max diepgang tonen
+  const currKaub  = currData['KAUB']  ? (currData['KAUB'].value  + 100) / 100 : null;
+  const currMaxau = currData['MAXAU'] ? (currData['MAXAU'].value - 180) / 100 : null;
+  const currDuis  = currData['DUISBURG-RUHRORT'] ? 2.80 + (currData['DUISBURG-RUHRORT'].value - 227) / 100 : null;
+
+  if (currKaub !== null) {
+    const vals = [
+      { label: 'Kaub (+100cm)',    v: currKaub,  color: '#378ADD', formula: `(${Math.round(currData['KAUB'].value)} + 100) / 100` },
+      { label: 'Maxau (−180cm)',   v: currMaxau, color: '#1D9E75', formula: currMaxau ? `(${Math.round(currData['MAXAU'].value)} − 180) / 100` : null },
+      { label: 'Duisburg (TuGLW)',v: currDuis,  color: '#D85A30', formula: currDuis  ? `2.80 + (${Math.round(currData['DUISBURG-RUHRORT'].value)} − 227) / 100` : null }
+    ].filter(x => x.v !== null).sort((a,b) => a.v - b.v);
+
+    const maxDraft = vals[0].v;
+    document.getElementById('maxdraft-now').textContent = maxDraft.toFixed(2) + ' m';
+    document.getElementById('maxdraft-breakdown').innerHTML = vals.map((x,i) =>
+      `<span style="color:${i===0?x.color:'#444'};font-weight:${i===0?'700':'400'};">` +
+      `${i===0?'▶ ':'　'}${x.label}: <strong style="color:${i===0?x.color:'#555'}">${x.v.toFixed(2)} m</strong>` +
+      `<span style="color:#333;font-size:10px;"> = ${x.formula}</span>` +
+      `${i===0?' <span style="font-size:10px;color:#f0d060;background:rgba(240,208,96,.12);padding:1px 6px;border-radius:4px;">bottleneck</span>':''}` +
+      `</span>`
+    ).join('<br>');
+  }
+
+  const allY = [...kaubPts, ...maxauPts, ...duisPts, ...minPts].map(p => p.y);
+  const pad  = 0.08;
+  const minY = Math.max(0, Math.min(...allY) - pad);
+  const maxY = Math.max(...allY) + pad;
+
+  chartInsts['maxdraft'] = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      datasets: [
+        // Achtergrondlijnen per station
+        { label: 'Kaub +100cm',    data: kaubPts,  borderColor: '#378ADD', borderWidth: 1.5, borderDash:[4,3], pointRadius: 0, tension: 0.3, parsing: false, backgroundColor:'transparent', fill:false },
+        { label: 'Maxau −180cm',   data: maxauPts, borderColor: '#1D9E75', borderWidth: 1.5, borderDash:[4,3], pointRadius: 0, tension: 0.3, parsing: false, backgroundColor:'transparent', fill:false },
+        { label: 'Duisburg TuGLW', data: duisPts,  borderColor: '#D85A30', borderWidth: 1.5, borderDash:[4,3], pointRadius: 0, tension: 0.3, parsing: false, backgroundColor:'transparent', fill:false },
+        // Minimum = echte max diepgang
+        { label: 'Max diepgang',   data: minPts,   borderColor: '#f0d060', borderWidth: 3,   pointRadius: 0, tension: 0.3, parsing: false, backgroundColor:'rgba(240,208,96,.08)', fill:'origin' },
+        // Nu-lijn
+        { label: '_now', data: [{x:nowMs,y:minY},{x:nowMs,y:maxY}], borderColor:'rgba(255,255,255,.2)', borderWidth:1, borderDash:[4,3], pointRadius:0, parsing:false, backgroundColor:'transparent', fill:false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: chartTooltipBg(), borderColor: chartTooltipBd(), borderWidth: 1,
+          titleColor: chartTooltipTtl(), bodyColor: chartTooltipTxt(), padding: 10,
+          filter: item => !item.dataset.label.startsWith('_'),
+          callbacks: {
+            title: items => {
+              if (!items.length) return '';
+              const d = new Date(items[0].parsed.x);
+              return d.toLocaleString('nl-NL', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+            },
+            label: item => `  ${item.dataset.label}: ${item.parsed.y.toFixed(2)} m`
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          min: window._chartXMin,
+          max: window._chartXMax,
+          grid: { color: chartGrid() },
+          border: { color: chartAxis() },
+          ticks: { color: chartTick(), font:{size:11}, maxTicksLimit:10,
+            callback: val => new Date(val).toLocaleDateString('nl-NL', { day:'numeric', month:'short' }) }
+        },
+        y: {
+          min: minY, max: maxY,
+          grid: { color: chartGrid() },
+          border: { color: chartAxis() },
+          ticks: { color: chartTick(), font:{size:11}, maxTicksLimit:6, callback: v => v.toFixed(1)+' m' }
+        }
+      }
+    }
+  });
+}
+
+function renderChart() {
+  // Bereken gemeenschappelijke X-as: 7 dagen terug t/m einde WSV-prognose (Kaub+Duisburg)
+  const nowMs = Date.now();
+  const xMin = nowMs - 7 * 86400000;
+  let xMax = nowMs + 4 * 86400000; // fallback: 4 dagen vooruit
+  ['KAUB','DUISBURG-RUHRORT'].forEach(id => {
+    const fc = fcData[id];
+    if (fc && fc.length > 0) {
+      const lastFc = Math.max(...fc.map(p => new Date(p.timestamp).getTime()));
+      if (lastFc > xMax) xMax = lastFc;
+    }
+  });
+  window._chartXMin = xMin;
+  window._chartXMax = xMax;
+
+  buildMaxDraftChart();
+  ST.forEach(s => buildChart(s));
+}
+
+function statusRow(navDepth, d) {
+  const margin = navDepth - d;
+  const cl  = margin > 0.5 ? 'ok' : margin > 0 ? 'warn' : 'bad';
+  const ico = margin > 0.5 ? '&#10003;' : margin > 0 ? '&#9888;' : '&#10005;';
+  const txt = margin > 0.5 ? 'Ruim vrij' : margin > 0 ? 'Krap' : 'Onvoldoende';
+  return { cl, ico, txt, margin };
+}
+
+function updateAutoTable() {
+  const kaubLevel = currData['KAUB'] ? currData['KAUB'].value : null;
+  if (kaubLevel === null) return;
+
+  const autoDraft = (kaubLevel + offsetCm) / 100;
+  document.getElementById('auto-draft-display').textContent = autoDraft.toFixed(2) + ' m';
+  document.getElementById('auto-kaub').textContent = Math.round(kaubLevel);
+  document.getElementById('auto-offset').textContent = offsetCm;
+
+  const tbody = document.getElementById('dtbody-auto');
+  tbody.innerHTML = ST.map(s => {
+    const curr = currData[s.id];
+    if (!curr) return '';
+    const navDepth = (s.tuglw / 100) + (curr.value - s.glw) / 100;
+    const { cl, ico, txt, margin } = statusRow(navDepth, autoDraft);
+    return `<tr>
+      <td><strong>${s.name}</strong></td>
+      <td>${navDepth.toFixed(2)} m</td>
+      <td>${autoDraft.toFixed(2)} m</td>
+      <td class="${cl}">${margin >= 0 ? '+' : ''}${margin.toFixed(2)} m</td>
+      <td class="${cl}"><span class="status-icon">${ico}</span>${txt}</td>
+    </tr>`;
+  }).join('');
+}
+
+function updateManualTable() {
+  const tbody = document.getElementById('dtbody');
+  tbody.innerHTML = ST.map(s => {
+    const curr = currData[s.id];
+    if (!curr) return '';
+    const navDepth = (s.tuglw / 100) + (curr.value - s.glw) / 100;
+    const { cl, ico, txt, margin } = statusRow(navDepth, draft);
+    return `<tr>
+      <td><strong>${s.name}</strong></td>
+      <td>${navDepth.toFixed(2)} m</td>
+      <td class="${cl}">${margin >= 0 ? '+' : ''}${margin.toFixed(2)} m</td>
+      <td class="${cl}"><span class="status-icon">${ico}</span>${txt}</td>
+    </tr>`;
+  }).join('');
+}
+
+function updateDraftTable() {
+  if (mode === 'auto') updateAutoTable();
+  else updateManualTable();
+}
+
+function setDraft(v, src) {
+  if (isNaN(v) || v < 0.3 || v > 5) return;
+  draft = v;
+  document.getElementById('dv').textContent = v.toFixed(2) + ' m';
+  if (src !== 's') document.getElementById('slider').value = v;
+  if (src !== 'i') document.getElementById('inp').value    = v.toFixed(2);
+  updateManualTable();
+}
+
+function setOffset(v, src) {
+  if (isNaN(v) || v < 10 || v > 300) return;
+  offsetCm = v;
+  document.getElementById('offset-dv').textContent = v + ' cm';
+  if (src !== 's') document.getElementById('offset-slider').value = v;
+  if (src !== 'i') document.getElementById('offset-inp').value    = v;
+  updateAutoTable();
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('pane-auto').style.display   = m === 'auto'   ? '' : 'none';
+  document.getElementById('pane-manual').style.display = m === 'manual' ? '' : 'none';
+  document.getElementById('btn-auto').className   = 'mode-btn ' + (m === 'auto'   ? 'active' : 'inactive');
+  document.getElementById('btn-manual').className = 'mode-btn ' + (m === 'manual' ? 'active' : 'inactive');
+}
+
+async function init() {
+  document.getElementById('ts').textContent = 'laden…';
+  document.getElementById('errmsg').style.display = 'none';
+  try {
+    await loadAll();
+    renderCards();
+    renderChart();
+    updateDraftTable();
+    const hvzImg = document.getElementById('hvz-maxau-img');
+    if (hvzImg) hvzImg.src = '/api/hvz-maxau.gif?ct=' + Date.now();
+    const hvzDate = document.getElementById('hvz-fc-date');
+    try {
+      const ftResp = await fetch('/api/hvz-fetch-time');
+      if (ftResp.ok) {
+        const ft = await ftResp.json();
+        if (hvzDate) hvzDate.textContent = 'HVZ opgehaald: ' + ft.time + ' · prognose gelezen: ' + hvzMaxauFcDate;
+      } else {
+        if (hvzDate) hvzDate.textContent = 'prognose gelezen: ' + hvzMaxauFcDate;
+      }
+    } catch {
+      if (hvzDate) hvzDate.textContent = 'prognose gelezen: ' + hvzMaxauFcDate;
+    }
+    document.getElementById('ts').textContent =
+      'bijgewerkt ' + new Date().toLocaleTimeString('nl-NL');
+  } catch (e) {
+    const em = document.getElementById('errmsg');
+    em.textContent = 'Fout bij ophalen data: ' + e.message;
+    em.style.display = 'block';
+    document.getElementById('ts').textContent = 'fout bij laden';
+    console.error(e);
+  }
+}
+
+function chartGrid() { return document.body.classList.contains('light') ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.05)'; }
+function chartAxis() { return document.body.classList.contains('light') ? 'rgba(0,0,0,.1)'  : 'rgba(255,255,255,.08)'; }
+function chartTick() { return document.body.classList.contains('light') ? '#888' : '#555'; }
+function chartTooltipBg()  { return document.body.classList.contains('light') ? '#fff'     : '#0e1014'; }
+function chartTooltipBd()  { return document.body.classList.contains('light') ? '#dde2ea'  : '#2e3138'; }
+function chartTooltipTtl() { return document.body.classList.contains('light') ? '#666'     : '#aaa'; }
+function chartTooltipTxt() { return document.body.classList.contains('light') ? '#1a1d24'  : '#e2e2df'; }
+
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('theme-btn').textContent = isLight ? '🌑' : '🌙';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  renderChart();
+}
+
+// Herstel opgeslagen thema
+if (localStorage.getItem('theme') === 'light') {
+  document.body.classList.add('light');
+  document.getElementById('theme-btn').textContent = '🌑';
+}
+
+init();
+setInterval(init, 15 * 60 * 1000);
+</script>
+</body>
+</html>
