@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
@@ -216,25 +216,6 @@
     }
     .section-title { font-size: 13px; font-weight: 700; color: var(--section-ttl); letter-spacing: -.2px; }
 
-    .mode-toggle {
-      display: flex;
-      border: 1px solid var(--border3);
-      border-radius: 8px;
-      overflow: hidden;
-      width: fit-content;
-      margin-bottom: 14px;
-    }
-    .mode-btn {
-      padding: 7px 18px;
-      font-size: 12px;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      transition: background .15s, color .15s;
-    }
-    .mode-btn.active   { background: #378ADD; color: #fff; }
-    .mode-btn.inactive { background: transparent; color: var(--text-dim); }
-    .mode-btn.inactive:hover { background: var(--mode-hover); color: var(--text-muted); }
 
     .draft-grid { display: grid; grid-template-columns: 240px 1fr; gap: 28px; align-items: start; }
 
@@ -254,16 +235,6 @@
     }
     .draft-display { font-size: 18px; font-weight: 700; margin-left: auto; color: var(--text); }
 
-    .auto-draft-box {
-      margin-top: 16px;
-      padding: 14px 16px;
-      background: rgba(55,138,221,.08);
-      border-radius: 10px;
-      border-left: 3px solid #378ADD;
-    }
-    .auto-draft-box .sub { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
-    .auto-draft-val  { font-size: 30px; font-weight: 700; color: #378ADD; line-height: 1; }
-    .auto-draft-meta { font-size: 11px; color: var(--text-dim); margin-top: 5px; }
 
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     thead th {
@@ -304,6 +275,46 @@
       display: none;
     }
     .loading { text-align: center; padding: 40px; color: var(--text-dimmer); font-size: 13px; }
+
+    /* ── Weer ───────────────────────────────────────────── */
+    .weather-updated { font-size: 11px; color: var(--text-dim); margin-left: auto; }
+    .weather-loading { color: var(--text-dim); font-size: 13px; padding: 20px 0; }
+    .weather-strip {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
+    }
+    .weather-strip::-webkit-scrollbar { height: 4px; }
+    .weather-strip::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+    .wday {
+      flex: 0 0 auto;
+      width: 88px;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 8px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      transition: background .15s;
+    }
+    .wday:hover { background: var(--bg-btn-h); }
+    .wday.today { border-color: #378ADD; background: rgba(55,138,221,.08); }
+    .wday-name  { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+    .wday-date  { font-size: 10px; color: var(--text-dim); }
+    .wday-icon  { width: 44px; height: 44px; margin: 2px 0; }
+    .wday-desc  { font-size: 10px; color: var(--text-muted); text-align: center; line-height: 1.3; min-height: 26px; }
+    .wday-temps { display: flex; gap: 6px; align-items: baseline; }
+    .wday-hi    { font-size: 15px; font-weight: 700; color: var(--text); }
+    .wday-lo    { font-size: 12px; color: var(--text-dim); }
+    .wday-rain  { display: flex; align-items: center; gap: 3px; font-size: 11px; color: #60a5fa; margin-top: 1px; }
+    .wday-rain svg { opacity: .85; }
+    .wday-wind  { display: flex; align-items: center; gap: 3px; font-size: 10px; color: var(--text-dim); }
+    .wday-wind svg { opacity: .7; }
 
     @media (max-width: 800px) {
       .cards { grid-template-columns: 1fr; }
@@ -421,67 +432,24 @@
 
   </div>
 
+  <!-- ── Weer Kehl ────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">🌤 Weer Kehl — 14-daagse verwachting</span>
+      <span class="weather-updated" id="weather-updated"></span>
+    </div>
+    <div class="weather-strip" id="weather-strip">
+      <div class="weather-loading">Weersdata laden…</div>
+    </div>
+  </div>
+
   <!-- ── Laadprofiel ──────────────────────────────────── -->
   <div class="section">
     <div class="section-header">
       <span class="section-title">⚓ Laadprofiel &amp; vaarstatus</span>
     </div>
 
-    <div class="mode-toggle">
-      <button id="btn-auto" class="mode-btn active" onclick="setMode('auto')">
-        Automatisch &mdash; Kaub + opslag
-      </button>
-      <button id="btn-manual" class="mode-btn inactive" onclick="setMode('manual')">
-        Vaste diepgang
-      </button>
-    </div>
-
-    <!-- AUTO -->
-    <div id="pane-auto">
-      <div class="draft-grid">
-        <div>
-          <label>Opslag bovenop Kaub-peil (cm)</label>
-          <input type="range" id="offset-slider" min="50" max="200" step="5" value="100"
-            oninput="setOffset(+this.value,'s')">
-          <div class="draft-inputs">
-            <input type="number" id="offset-inp" min="50" max="200" step="5" value="100"
-              oninput="setOffset(+this.value,'i')">
-            <span style="color:#555;font-size:12px;">cm opslag</span>
-            <span class="draft-display" id="offset-dv">100 cm</span>
-          </div>
-          <div class="auto-draft-box">
-            <div class="sub">Berekende laaddiepgang</div>
-            <div class="auto-draft-val" id="auto-draft-display">—</div>
-            <div class="auto-draft-meta" id="auto-draft-sub">
-              Kaub <span id="auto-kaub">—</span> cm + <span id="auto-offset">100</span> cm
-            </div>
-          </div>
-          <p style="font-size:11px;color:#444;margin-top:12px;line-height:1.6;">
-            Diepgang volgt automatisch het Kaub-peil.<br>
-            Indicatief — raadpleeg ELWIS voor exacte vaardiepten.
-          </p>
-        </div>
-        <div>
-          <table>
-            <thead>
-              <tr>
-                <th>Station</th>
-                <th>Vaardiepte</th>
-                <th>Diepgang</th>
-                <th>Speling</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="dtbody-auto">
-              <tr><td colspan="5" style="color:#444">Data laden&hellip;</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- MANUAL -->
-    <div id="pane-manual" style="display:none;">
+    <div id="pane-manual">
       <div class="draft-grid">
         <div>
           <label>Vaste diepgang (meter)</label>
@@ -540,22 +508,21 @@ let histData = {};
 let fcData   = {};
 let currData = {};
 let draft = 2.50;
-let offsetCm = 100;
-let mode = 'auto';
 
-// HVZ Maxau prognose — afgelezen uit HVZ-grafiek op 17 jun 2026 10:34
+// HVZ Maxau prognose — afgelezen uit HVZ-grafiek op 18 jun 2026 08:54
 // Rood = Vorhersage, Geel = Abschätzung der weiteren Tendenz
 const hvzMaxauFc = [
-  { x: new Date('2026-06-17T16:00:00Z').getTime(), y: 413 },
-  { x: new Date('2026-06-18T10:00:00Z').getTime(), y: 407 },
-  { x: new Date('2026-06-19T10:00:00Z').getTime(), y: 404 },
-  { x: new Date('2026-06-20T10:00:00Z').getTime(), y: 402 },
-  { x: new Date('2026-06-21T10:00:00Z').getTime(), y: 400 },
-  { x: new Date('2026-06-23T10:00:00Z').getTime(), y: 398 },
-  { x: new Date('2026-06-25T10:00:00Z').getTime(), y: 396 },
-  { x: new Date('2026-06-27T10:00:00Z').getTime(), y: 393 },
+  { x: new Date('2026-06-18T10:00:00Z').getTime(), y: 418 },
+  { x: new Date('2026-06-19T08:00:00Z').getTime(), y: 406 },
+  { x: new Date('2026-06-20T08:00:00Z').getTime(), y: 403 },
+  { x: new Date('2026-06-21T08:00:00Z').getTime(), y: 406 },
+  { x: new Date('2026-06-22T08:00:00Z').getTime(), y: 410 },
+  { x: new Date('2026-06-23T08:00:00Z').getTime(), y: 413 },
+  { x: new Date('2026-06-25T08:00:00Z').getTime(), y: 415 },
+  { x: new Date('2026-06-27T08:00:00Z').getTime(), y: 420 },
+  { x: new Date('2026-06-28T08:00:00Z').getTime(), y: 428 },
 ];
-const hvzMaxauFcDate = '17 jun 2026 10:34';
+const hvzMaxauFcDate = '18 jun 2026 08:54';
 
 function downsample(arr, target) {
   if (!arr || arr.length === 0) return [];
@@ -569,7 +536,7 @@ function downsample(arr, target) {
 
 async function loadAll() {
   const [hRes, cRes] = await Promise.all([
-    Promise.all(ST.map(s => fetch(`${BASE}/${s.id}/W/measurements.json?start=P7D`).then(r => r.json()))),
+    Promise.all(ST.map(s => fetch(`${BASE}/${s.id}/W/measurements.json?start=P3D`).then(r => r.json()))),
     Promise.all(ST.map(s => fetch(`${BASE}/${s.id}/W/currentmeasurement.json`).then(r => r.json())))
   ]);
 
@@ -730,7 +697,7 @@ function buildChart(s) {
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
-      interaction: { mode: 'index', intersect: false },
+      interaction: { mode: 'nearest', intersect: false },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -744,7 +711,13 @@ function buildChart(s) {
           callbacks: {
             title: items => {
               if (!items.length) return '';
-              const d = new Date(items[0].parsed.x);
+              let maxXMs = -Infinity;
+              for (const it of items) {
+                const pt = it.chart.data.datasets[it.datasetIndex].data[it.dataIndex];
+                const xMs = (pt && pt.x != null) ? pt.x : it.parsed.x;
+                if (xMs > maxXMs) maxXMs = xMs;
+              }
+              const d = new Date(maxXMs);
               return d.toLocaleString('nl-NL', {
                 weekday: 'short', day: 'numeric', month: 'short',
                 hour: '2-digit', minute: '2-digit'
@@ -877,7 +850,7 @@ function buildMaxDraftChart() {
     },
     options: {
       responsive: true, maintainAspectRatio: false, animation: false,
-      interaction: { mode: 'index', intersect: false },
+      interaction: { mode: 'nearest', intersect: false },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -887,7 +860,9 @@ function buildMaxDraftChart() {
           callbacks: {
             title: items => {
               if (!items.length) return '';
-              const d = new Date(items[0].parsed.x);
+              let maxXMs = -Infinity;
+              for (const it of items) { const pt = it.chart.data.datasets[it.datasetIndex].data[it.dataIndex]; const xMs = (pt && pt.x != null) ? pt.x : it.parsed.x; if (xMs > maxXMs) maxXMs = xMs; }
+              const d = new Date(maxXMs);
               return d.toLocaleString('nl-NL', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
             },
             label: item => `  ${item.dataset.label}: ${item.parsed.y.toFixed(2)} m`
@@ -942,31 +917,6 @@ function statusRow(navDepth, d) {
   return { cl, ico, txt, margin };
 }
 
-function updateAutoTable() {
-  const kaubLevel = currData['KAUB'] ? currData['KAUB'].value : null;
-  if (kaubLevel === null) return;
-
-  const autoDraft = (kaubLevel + offsetCm) / 100;
-  document.getElementById('auto-draft-display').textContent = autoDraft.toFixed(2) + ' m';
-  document.getElementById('auto-kaub').textContent = Math.round(kaubLevel);
-  document.getElementById('auto-offset').textContent = offsetCm;
-
-  const tbody = document.getElementById('dtbody-auto');
-  tbody.innerHTML = ST.map(s => {
-    const curr = currData[s.id];
-    if (!curr) return '';
-    const navDepth = (s.tuglw / 100) + (curr.value - s.glw) / 100;
-    const { cl, ico, txt, margin } = statusRow(navDepth, autoDraft);
-    return `<tr>
-      <td><strong>${s.name}</strong></td>
-      <td>${navDepth.toFixed(2)} m</td>
-      <td>${autoDraft.toFixed(2)} m</td>
-      <td class="${cl}">${margin >= 0 ? '+' : ''}${margin.toFixed(2)} m</td>
-      <td class="${cl}"><span class="status-icon">${ico}</span>${txt}</td>
-    </tr>`;
-  }).join('');
-}
-
 function updateManualTable() {
   const tbody = document.getElementById('dtbody');
   tbody.innerHTML = ST.map(s => {
@@ -984,8 +934,7 @@ function updateManualTable() {
 }
 
 function updateDraftTable() {
-  if (mode === 'auto') updateAutoTable();
-  else updateManualTable();
+  updateManualTable();
 }
 
 function setDraft(v, src) {
@@ -997,21 +946,110 @@ function setDraft(v, src) {
   updateManualTable();
 }
 
-function setOffset(v, src) {
-  if (isNaN(v) || v < 10 || v > 300) return;
-  offsetCm = v;
-  document.getElementById('offset-dv').textContent = v + ' cm';
-  if (src !== 's') document.getElementById('offset-slider').value = v;
-  if (src !== 'i') document.getElementById('offset-inp').value    = v;
-  updateAutoTable();
+
+// ── Weer Kehl ────────────────────────────────────────────────────────────────
+const KEHL_LAT = 48.574, KEHL_LON = 7.810;
+
+const WMO_INFO = {
+  0:  { label: 'Helder',        icon: 'sun' },
+  1:  { label: 'Overwegend helder', icon: 'sun-cloud' },
+  2:  { label: 'Wisselend bewolkt', icon: 'cloud-sun' },
+  3:  { label: 'Bewolkt',       icon: 'cloud' },
+  45: { label: 'Mist',          icon: 'fog' },
+  48: { label: 'IJsmist',       icon: 'fog' },
+  51: { label: 'Lichte motregen', icon: 'drizzle' },
+  53: { label: 'Motregen',      icon: 'drizzle' },
+  55: { label: 'Zware motregen', icon: 'drizzle' },
+  61: { label: 'Lichte regen',  icon: 'rain' },
+  63: { label: 'Regen',         icon: 'rain' },
+  65: { label: 'Zware regen',   icon: 'rain-heavy' },
+  71: { label: 'Lichte sneeuw', icon: 'snow' },
+  73: { label: 'Sneeuw',        icon: 'snow' },
+  75: { label: 'Zware sneeuw',  icon: 'snow' },
+  77: { label: 'Sneeuwkorrels', icon: 'snow' },
+  80: { label: 'Regen­buien',   icon: 'shower' },
+  81: { label: 'Zware buien',   icon: 'shower' },
+  82: { label: 'Hevige buien',  icon: 'shower' },
+  85: { label: 'Sneeuwbuien',   icon: 'snow' },
+  86: { label: 'Zware sneeuwbuien', icon: 'snow' },
+  95: { label: 'Onweer',        icon: 'thunder' },
+  96: { label: 'Onweer + hagel', icon: 'thunder' },
+  99: { label: 'Onweer + zware hagel', icon: 'thunder' },
+};
+
+function weatherIcon(type, size = 44) {
+  const s = size, h = Math.round(s / 2), q = Math.round(s * .4);
+  const sun   = `<circle cx="${h}" cy="${h}" r="${Math.round(s*.18)}" fill="#FBBF24"/>` +
+    [0,45,90,135,180,225,270,315].map(a => {
+      const r = Math.round(s*.28), r2 = Math.round(s*.34), rad = a*Math.PI/180;
+      return `<line x1="${h+r*Math.cos(rad)}" y1="${h+r*Math.sin(rad)}" x2="${h+r2*Math.cos(rad)}" y2="${h+r2*Math.sin(rad)}" stroke="#FBBF24" stroke-width="2.5" stroke-linecap="round"/>`;
+    }).join('');
+  const cloud = (cx,cy,sc=1) => `<ellipse cx="${cx}" cy="${cy}" rx="${Math.round(12*sc)}" ry="${Math.round(8*sc)}" fill="currentColor"/>
+    <circle cx="${cx-Math.round(7*sc)}" cy="${cy}" r="${Math.round(6*sc)}" fill="currentColor"/>
+    <circle cx="${cx+Math.round(5*sc)}" cy="${cy-Math.round(2*sc)}" r="${Math.round(7*sc)}" fill="currentColor"/>`;
+
+  const icons = {
+    sun: `<g>${sun}</g>`,
+    'sun-cloud': `<g opacity=".9">${[0,60,120,180,240,300].map(a=>{const r=s*.22,r2=s*.28,rad=a*Math.PI/180;return`<line x1="${h*.6+r*Math.cos(rad)}" y1="${h*.55+r*Math.sin(rad)}" x2="${h*.6+r2*Math.cos(rad)}" y2="${h*.55+r2*Math.sin(rad)}" stroke="#FBBF24" stroke-width="2" stroke-linecap="round"/>`;}).join('')}<circle cx="${h*.6}" cy="${h*.52}" r="${Math.round(s*.15)}" fill="#FBBF24"/></g><g color="#9CA3AF">${cloud(h+4,h+6,.9)}</g>`,
+    'cloud-sun': `<g color="#D1D5DB">${cloud(h,h+4,1)}</g><g opacity=".75"><circle cx="${Math.round(s*.3)}" cy="${Math.round(s*.32)}" r="${Math.round(s*.14)}" fill="#FBBF24"/>${[0,60,120,180,240,300].map(a=>{const r=s*.2,r2=s*.26,rad=a*Math.PI/180;return`<line x1="${s*.3+r*Math.cos(rad)}" y1="${s*.32+r*Math.sin(rad)}" x2="${s*.3+r2*Math.cos(rad)}" y2="${s*.32+r2*Math.sin(rad)}" stroke="#FBBF24" stroke-width="1.8" stroke-linecap="round"/>`;}).join('')}</g>`,
+    cloud: `<g color="#9CA3AF">${cloud(h,h,1.05)}</g>`,
+    fog:   `<g color="#9CA3AF">${cloud(h,h*.7,.9)}</g>${[0,1,2].map(i=>`<line x1="${Math.round(s*.18)}" y1="${Math.round(s*.62+i*s*.1)}" x2="${Math.round(s*.82)}" y2="${Math.round(s*.62+i*s*.1)}" stroke="#9CA3AF" stroke-width="2.5" stroke-linecap="round" opacity="${.7-i*.15}"/>`).join('')}`,
+    drizzle:`<g color="#93C5FD">${cloud(h,h*.6,.95)}</g>${[0,1,2].map(i=>`<line x1="${Math.round(s*.3+i*s*.2)}" y1="${Math.round(s*.72)}" x2="${Math.round(s*.27+i*s*.2)}" y2="${Math.round(s*.88)}" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"/>`).join('')}`,
+    rain:  `<g color="#93C5FD">${cloud(h,h*.58,.98)}</g>${[0,1,2,3].map(i=>`<line x1="${Math.round(s*.22+i*s*.18)}" y1="${Math.round(s*.72)}" x2="${Math.round(s*.18+i*s*.18)}" y2="${Math.round(s*.9)}" stroke="#3B82F6" stroke-width="2.2" stroke-linecap="round"/>`).join('')}`,
+    'rain-heavy':`<g color="#6B7280">${cloud(h,h*.55,1)}</g>${[0,1,2,3,4].map(i=>`<line x1="${Math.round(s*.16+i*s*.16)}" y1="${Math.round(s*.70)}" x2="${Math.round(s*.12+i*s*.16)}" y2="${Math.round(s*.9)}" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"/>`).join('')}`,
+    shower:`<g><g opacity=".8">${[0,60,120,180,240,300].map(a=>{const r=s*.16,r2=s*.22,rad=a*Math.PI/180;return`<line x1="${h*.55+r*Math.cos(rad)}" y1="${h*.48+r*Math.sin(rad)}" x2="${h*.55+r2*Math.cos(rad)}" y2="${h*.48+r2*Math.sin(rad)}" stroke="#FBBF24" stroke-width="1.8" stroke-linecap="round"/>`;}).join('')}<circle cx="${Math.round(h*.55)}" cy="${Math.round(h*.48)}" r="${Math.round(s*.13)}" fill="#FBBF24"/></g><g color="#93C5FD">${cloud(h+4,h*.72,.85)}</g></g>${[0,1,2].map(i=>`<line x1="${Math.round(s*.32+i*s*.18)}" y1="${Math.round(s*.8)}" x2="${Math.round(s*.28+i*s*.18)}" y2="${Math.round(s*.93)}" stroke="#60A5FA" stroke-width="2.2" stroke-linecap="round"/>`).join('')}`,
+    snow:  `<g color="#D1D5DB">${cloud(h,h*.58,.98)}</g>${[0,1,2,3].map(i=>`<text x="${Math.round(s*.2+i*s*.19)}" y="${Math.round(s*.88)}" font-size="${Math.round(s*.18)}" fill="#BAE6FD" text-anchor="middle">❄</text>`).join('')}`,
+    thunder:`<g color="#6B7280">${cloud(h,h*.5,1.05)}</g><polygon points="${Math.round(h+2)},${Math.round(s*.68)} ${Math.round(h-6)},${Math.round(s*.82)} ${Math.round(h+1)},${Math.round(s*.82)} ${Math.round(h-4)},${Math.round(s*.96)} ${Math.round(h+10)},${Math.round(s*.75)} ${Math.round(h+3)},${Math.round(s*.75)}" fill="#FDE047"/>`,
+  };
+  const ic = icons[type] || icons.cloud;
+  return `<svg viewBox="0 0 ${s} ${s}" width="${s}" height="${s}" xmlns="http://www.w3.org/2000/svg">${ic}</svg>`;
 }
 
-function setMode(m) {
-  mode = m;
-  document.getElementById('pane-auto').style.display   = m === 'auto'   ? '' : 'none';
-  document.getElementById('pane-manual').style.display = m === 'manual' ? '' : 'none';
-  document.getElementById('btn-auto').className   = 'mode-btn ' + (m === 'auto'   ? 'active' : 'inactive');
-  document.getElementById('btn-manual').className = 'mode-btn ' + (m === 'manual' ? 'active' : 'inactive');
+async function loadWeather() {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${KEHL_LAT}&longitude=${KEHL_LON}` +
+    `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max` +
+    `&timezone=Europe%2FBerlin&forecast_days=14`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('Weersdata niet beschikbaar');
+  return r.json();
+}
+
+function renderWeather(data) {
+  const strip = document.getElementById('weather-strip');
+  const d = data.daily;
+  const today = new Date().toISOString().slice(0, 10);
+  const days = ['zo','ma','di','wo','do','vr','za'];
+  const months = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+
+  strip.innerHTML = d.time.map((dateStr, i) => {
+    const dt   = new Date(dateStr + 'T12:00:00');
+    const info = WMO_INFO[d.weathercode[i]] || { label: '—', icon: 'cloud' };
+    const hi   = Math.round(d.temperature_2m_max[i]);
+    const lo   = Math.round(d.temperature_2m_min[i]);
+    const rain = d.precipitation_sum[i];
+    const wind = Math.round(d.windspeed_10m_max[i]);
+    const isToday = dateStr === today;
+    const dayName = isToday ? 'vandaag' : days[dt.getDay()];
+    const dateLabel = `${dt.getDate()} ${months[dt.getMonth()]}`;
+    const rainStr = rain > 0.1 ? `${rain.toFixed(rain < 1 ? 1 : 0)} mm` : '';
+
+    return `<div class="wday${isToday ? ' today' : ''}">
+      <div class="wday-name">${dayName}</div>
+      <div class="wday-date">${dateLabel}</div>
+      <div class="wday-icon">${weatherIcon(info.icon, 44)}</div>
+      <div class="wday-desc">${info.label}</div>
+      <div class="wday-temps">
+        <span class="wday-hi">${hi}°</span>
+        <span class="wday-lo">${lo}°</span>
+      </div>
+      ${rainStr ? `<div class="wday-rain"><svg width="10" height="13" viewBox="0 0 10 13" fill="none"><path d="M5 0 Q5 0 5 0 C5 0 0 6 0 8.5a5 5 0 0 0 10 0C10 6 5 0 5 0z" fill="#60A5FA"/></svg>${rainStr}</div>` : `<div class="wday-rain" style="visibility:hidden">-</div>`}
+      <div class="wday-wind"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 5.5h7M6 3l3 2.5L6 8" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>${wind} km/h</div>
+    </div>`;
+  }).join('');
+
+  const now = new Date();
+  document.getElementById('weather-updated').textContent =
+    `Open-Meteo · ${now.getDate()} ${months[now.getMonth()]} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
 }
 
 async function init() {
@@ -1022,6 +1060,10 @@ async function init() {
     renderCards();
     renderChart();
     updateDraftTable();
+    loadWeather().then(renderWeather).catch(() => {
+      document.getElementById('weather-strip').innerHTML =
+        '<div class="weather-loading">Weersdata niet beschikbaar</div>';
+    });
     const hvzImg = document.getElementById('hvz-maxau-img');
     if (hvzImg) hvzImg.src = '/api/hvz-maxau.gif?ct=' + Date.now();
     const hvzDate = document.getElementById('hvz-fc-date');
