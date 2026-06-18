@@ -316,10 +316,15 @@
     .wday-wind  { display: flex; align-items: center; gap: 3px; font-size: 10px; color: var(--text-dim); }
     .wday-wind svg { opacity: .7; }
 
+    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+
     @media (max-width: 800px) {
       .cards { grid-template-columns: 1fr; }
       .draft-grid { grid-template-columns: 1fr; }
       .chart-legend { display: none; }
+      .charts-row { grid-template-columns: 1fr; }
+      .chart-wrap { height: 200px; }
+      .hvz-fc-label { display: none; }
     }
   </style>
 </head>
@@ -349,7 +354,7 @@
   </div>
 
   <!-- ── Rij 1: Max Laaddiepgang + Kaub ──────────────── -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+  <div class="charts-row">
 
     <div class="chart-section" style="border-color:#3a3020;margin-bottom:0;">
       <div class="chart-header">
@@ -396,13 +401,13 @@
   </div>
 
   <!-- ── Rij 2: Maxau + Duisburg ──────────────────────── -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+  <div class="charts-row">
 
     <div class="chart-section" style="margin-bottom:0;">
       <div class="chart-header">
         <div class="chart-title-group">
           <span class="chart-title" style="color:#1D9E75;">Maxau</span>
-          <span class="chart-subtitle">7d meting · HVZ prognose t/m 27 jun · <span style="color:#f0a000;" id="hvz-fc-date"></span></span>
+          <span class="chart-subtitle">7d meting · HVZ prognose<span class="hvz-fc-label"> · <span style="color:#f0a000;" id="hvz-fc-date"></span></span></span>
         </div>
         <div class="chart-legend">
           <span class="legend-item"><span class="leg-line" style="background:#1D9E75;"></span>Meting</span>
