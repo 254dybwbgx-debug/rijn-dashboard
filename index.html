@@ -87,19 +87,15 @@
 
     /* ── Header ─────────────────────────────────────────── */
     .header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       margin-bottom: 14px;
       padding-bottom: 14px;
       border-bottom: 1px solid var(--border2);
     }
-    .header-logos { display: flex; align-items: center; justify-content: center; gap: 24px; margin-bottom: 10px; }
-    .header-logos img { height: 56px; width: auto; }
-    .header-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header-row { display: flex; align-items: center; justify-content: space-between; }
+    .header-logos { display: flex; align-items: center; gap: 16px; }
+    .header-logos img { height: 44px; width: auto; }
     .header h1   { font-size: 20px; font-weight: 700; color: var(--text-h); letter-spacing: -.3px; }
-    .header p    { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .header p    { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
     .header-btns { display: flex; gap: 8px; align-items: center; }
 
     .btn {
@@ -335,16 +331,14 @@
 
   <!-- ── Header ───────────────────────────────────────── -->
   <div class="header">
-    <div class="header-logos">
-      <img src="logo-ruijven.png" alt="Ruijven b.v.">
-      <img src="logo-rtlloyd.png" alt="RT Lloyd b.v.">
-    </div>
     <div class="header-row">
-      <div class="header-left">
-        <div>
-          <h1>Rijn Waterstanden</h1>
-          <p>Kaub &middot; Maxau &middot; Duisburg-Ruhrort &nbsp;&mdash;&nbsp; <span id="ts">laden&hellip;</span></p>
-        </div>
+      <div>
+        <h1>Rijn Waterstanden</h1>
+        <p>Kaub &middot; Maxau &middot; Duisburg-Ruhrort &nbsp;&mdash;&nbsp; <span id="ts">laden&hellip;</span></p>
+      </div>
+      <div class="header-logos">
+        <img src="logo-ruijven.png" alt="Ruijven b.v.">
+        <img src="logo-rtlloyd.png" alt="RT Lloyd b.v.">
       </div>
       <div class="header-btns">
         <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Wissel thema">🌙</button>
