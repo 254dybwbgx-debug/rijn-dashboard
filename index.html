@@ -745,7 +745,7 @@ function buildChart(s) {
           grid: { color: chartGrid() },
           border: { color: chartAxis() },
           ticks: {
-            color: chartTick(), font: { size: 11 }, maxTicksLimit: 10,
+            color: chartTick(), font: { size: 11 }, stepSize: 86400000,
             callback: val => new Date(val).toLocaleDateString('nl-NL', { day:'numeric', month:'short' })
           }
         },
@@ -886,7 +886,7 @@ function buildMaxDraftChart() {
           max: window._chartXMax,
           grid: { color: chartGrid() },
           border: { color: chartAxis() },
-          ticks: { color: chartTick(), font:{size:11}, maxTicksLimit:10,
+          ticks: { color: chartTick(), font:{size:11}, stepSize: 86400000,
             callback: val => new Date(val).toLocaleDateString('nl-NL', { day:'numeric', month:'short' }) }
         },
         y: {
