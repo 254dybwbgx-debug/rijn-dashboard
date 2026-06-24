@@ -518,7 +518,7 @@ let draft = 2.50;
 // HVZ Maxau prognose — afgelezen uit HVZ-grafiek op 24 jun 2026 08:07
 // Rood = Vorhersage, Geel = Abschätzung der weiteren Tendenz
 const hvzMaxauFc = [
-  { x: new Date('2026-06-24T06:00:00Z').getTime(), y: 389 },
+  { x: new Date('2026-06-24T16:00:00Z').getTime(), y: 387 },
   { x: new Date('2026-06-25T06:00:00Z').getTime(), y: 384 },
   { x: new Date('2026-06-26T06:00:00Z').getTime(), y: 378 },
   { x: new Date('2026-06-27T06:00:00Z').getTime(), y: 373 },
@@ -644,8 +644,9 @@ function buildChart(s) {
 
   // ── 2. Korte termijn WSV prognose (4 dagen, Kaub & Duisburg) ──
   if (s.hasFc && fcData[s.id] && fcData[s.id].length > 0) {
-    const fpts = fcData[s.id].map(p => ({ x: new Date(p.timestamp).getTime(), y: p.value }));
-    fpts.forEach(p => allY.push(p.y));
+    const allFpts = fcData[s.id].map(p => ({ x: new Date(p.timestamp).getTime(), y: p.value }));
+    const fpts = allFpts.filter(p => p.x > nowMs);
+    allFpts.forEach(p => allY.push(p.y));
     datasets.push({
       label: s.name + ' 4d prognose',
       data: fpts,
@@ -662,9 +663,7 @@ function buildChart(s) {
 
   // ── 2b. HVZ Maxau prognose (visueel afgelezen) ──
   if (s.id === 'MAXAU' && hvzMaxauFc.length > 0) {
-    const curr = currData['MAXAU'];
-    const bridge = curr ? [{ x: nowMs, y: curr.value }] : [];
-    const fcPts = [...bridge, ...hvzMaxauFc.filter(p => p.x > nowMs)];
+    const fcPts = hvzMaxauFc.filter(p => p.x > nowMs);
     fcPts.forEach(p => allY.push(p.y));
     datasets.push({
       label: 'Maxau HVZ prognose',
@@ -674,7 +673,7 @@ function buildChart(s) {
       fill: false,
       borderWidth: 2,
       borderDash: [8, 4],
-      pointRadius: [0, ...fcPts.slice(1).map(() => 4)],
+      pointRadius: fcPts.map(() => 4),
       pointStyle: 'circle',
       tension: 0.3,
       parsing: false
