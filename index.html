@@ -910,6 +910,10 @@ function renderChart() {
       if (lastFc > xMax) xMax = lastFc;
     }
   });
+  if (hvzMaxauFc.length > 0) {
+    const lastHvz = Math.max(...hvzMaxauFc.map(p => p.x));
+    if (lastHvz > xMax) xMax = lastHvz;
+  }
   window._chartXMin = xMin;
   window._chartXMax = xMax;
 
