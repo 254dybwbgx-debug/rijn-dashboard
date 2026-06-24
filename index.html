@@ -441,7 +441,7 @@
   <!-- ── Weer Kehl ────────────────────────────────────── -->
   <div class="section">
     <div class="section-header">
-      <span class="section-title">🌤 Weer Kehl — 14-daagse verwachting</span>
+      <span class="section-title">🌤 Weer <select id="weather-city" onchange="switchWeatherCity(this.value)" style="background:var(--bg-btn);color:var(--text-h);border:1px solid var(--border2);border-radius:6px;padding:2px 6px;font-size:inherit;font-weight:700;cursor:pointer;"></select> — 14-daagse verwachting</span>
       <span class="weather-updated" id="weather-updated"></span>
     </div>
     <div class="weather-strip" id="weather-strip">
@@ -955,8 +955,13 @@ function setDraft(v, src) {
 }
 
 
-// ── Weer Kehl ────────────────────────────────────────────────────────────────
-const KEHL_LAT = 48.574, KEHL_LON = 7.810;
+// ── Weer ─────────────────────────────────────────────────────────────────────
+const WEATHER_CITIES = [
+  { name: 'Kehl',      lat: 48.574, lon: 7.810 },
+  { name: 'Karlsruhe', lat: 49.009, lon: 8.404 },
+  { name: 'Basel',     lat: 47.559, lon: 7.589 },
+];
+let weatherCity = WEATHER_CITIES[0];
 
 const WMO_INFO = {
   0:  { label: 'Helder',        icon: 'sun' },
@@ -1013,8 +1018,24 @@ function weatherIcon(type, size = 44) {
   return `<svg viewBox="0 0 ${s} ${s}" width="${s}" height="${s}" xmlns="http://www.w3.org/2000/svg">${ic}</svg>`;
 }
 
+function initWeatherSelector() {
+  const sel = document.getElementById('weather-city');
+  if (!sel) return;
+  sel.innerHTML = WEATHER_CITIES.map((c, i) =>
+    `<option value="${i}">${c.name}</option>`
+  ).join('');
+}
+
+function switchWeatherCity(idx) {
+  weatherCity = WEATHER_CITIES[idx];
+  document.getElementById('weather-strip').innerHTML = '<div class="weather-loading">Weersdata laden…</div>';
+  loadWeather().then(renderWeather).catch(() => {
+    document.getElementById('weather-strip').innerHTML = '<div class="weather-loading">Weersdata niet beschikbaar</div>';
+  });
+}
+
 async function loadWeather() {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${KEHL_LAT}&longitude=${KEHL_LON}` +
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${weatherCity.lat}&longitude=${weatherCity.lon}` +
     `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max` +
     `&timezone=Europe%2FBerlin&forecast_days=14`;
   const r = await fetch(url);
@@ -1063,6 +1084,7 @@ function renderWeather(data) {
 async function init() {
   document.getElementById('ts').textContent = 'laden…';
   document.getElementById('errmsg').style.display = 'none';
+  initWeatherSelector();
   try {
     await loadAll();
     renderCards();
