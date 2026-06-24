@@ -902,7 +902,7 @@ function renderChart() {
   // Bereken gemeenschappelijke X-as: 7 dagen terug t/m einde WSV-prognose (Kaub+Duisburg)
   const nowMs = Date.now();
   const xMin = nowMs - 2 * 86400000;
-  let xMax = nowMs + 4 * 86400000; // fallback: 4 dagen vooruit
+  let xMax = nowMs + 4 * 86400000; // 4 dagen vooruit
   ['KAUB','DUISBURG-RUHRORT'].forEach(id => {
     const fc = fcData[id];
     if (fc && fc.length > 0) {
@@ -910,10 +910,6 @@ function renderChart() {
       if (lastFc > xMax) xMax = lastFc;
     }
   });
-  if (hvzMaxauFc.length > 0) {
-    const lastHvz = Math.max(...hvzMaxauFc.map(p => p.x));
-    if (lastHvz > xMax) xMax = lastHvz;
-  }
   window._chartXMin = xMin;
   window._chartXMax = xMax;
 
