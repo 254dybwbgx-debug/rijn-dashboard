@@ -544,7 +544,7 @@ function downsample(arr, target) {
 
 async function loadAll() {
   const [hRes, cRes] = await Promise.all([
-    Promise.all(ST.map(s => fetch(`${BASE}/${s.id}/W/measurements.json?start=P3D`).then(r => r.json()))),
+    Promise.all(ST.map(s => fetch(`${BASE}/${s.id}/W/measurements.json?start=P7D`).then(r => r.json()))),
     Promise.all(ST.map(s => fetch(`${BASE}/${s.id}/W/currentmeasurement.json`).then(r => r.json())))
   ]);
 
