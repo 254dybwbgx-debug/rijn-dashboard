@@ -544,7 +544,7 @@ function downsample(arr, target) {
 
 async function loadAll() {
   const [hRes, cRes] = await Promise.all([
-    Promise.all(ST.map(s => fetch(`${BASE}/${s.id}/W/measurements.json?start=P7D`).then(r => r.json()))),
+    Promise.all(ST.map(s => fetch(`${BASE}/${s.id}/W/measurements.json?start=P3D`).then(r => r.json()))),
     Promise.all(ST.map(s => fetch(`${BASE}/${s.id}/W/currentmeasurement.json`).then(r => r.json())))
   ]);
 
@@ -663,7 +663,9 @@ function buildChart(s) {
 
   // ── 2b. HVZ Maxau prognose (visueel afgelezen) ──
   if (s.id === 'MAXAU' && hvzMaxauFc.length > 0) {
-    const fcPts = hvzMaxauFc.filter(p => p.x > nowMs);
+    const currMaxau = currData['MAXAU'];
+    const bridge = currMaxau ? [{ x: nowMs, y: currMaxau.value }] : [];
+    const fcPts = [...bridge, ...hvzMaxauFc.filter(p => p.x > nowMs)];
     fcPts.forEach(p => allY.push(p.y));
     datasets.push({
       label: 'Maxau HVZ prognose',
@@ -775,9 +777,10 @@ function buildMaxDraftChart() {
     x: new Date(p.timestamp).getTime(),
     y: (p.value - 180) / 100
   }));
-  const maxauFcPts = hvzMaxauFc.filter(p => p.x > nowMs).map(p => ({
+  const maxauBridge = currData['MAXAU'] ? [{ x: nowMs, y: (currData['MAXAU'].value - 180) / 100 }] : [];
+  const maxauFcPts = [...maxauBridge, ...hvzMaxauFc.filter(p => p.x > nowMs).map(p => ({
     x: p.x, y: (p.y - 180) / 100
-  }));
+  }))];
   const maxauPts = [...maxauHist, ...maxauFcPts];
 
   // Duisburg: TuGLW + (peil - GlW) / 100 m
