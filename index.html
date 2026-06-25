@@ -1136,8 +1136,8 @@ function toggleTheme() {
   renderChart();
 }
 
-// Herstel opgeslagen thema
-if (localStorage.getItem('theme') === 'light') {
+// Herstel opgeslagen thema (standaard licht)
+if (localStorage.getItem('theme') !== 'dark') {
   document.body.classList.add('light');
   document.getElementById('theme-btn').textContent = '🌑';
 }
