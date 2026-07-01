@@ -515,22 +515,22 @@ let fcData   = {};
 let currData = {};
 let draft = 2.50;
 
-// HVZ Maxau prognose — afgelezen uit HVZ-grafiek op 30 jun 2026 06:34
+// HVZ Maxau prognose — afgelezen uit HVZ-grafiek op 1 jul 2026 08:23
 // Rood = Vorhersage, Geel = Abschätzung der weiteren Tendenz
 const hvzMaxauFc = [
-  { x: new Date('2026-06-30T04:00:00Z').getTime(), y: 400 },
-  { x: new Date('2026-07-01T06:00:00Z').getTime(), y: 393 },
-  { x: new Date('2026-07-02T06:00:00Z').getTime(), y: 408 },
-  { x: new Date('2026-07-03T06:00:00Z').getTime(), y: 400 },
-  { x: new Date('2026-07-04T06:00:00Z').getTime(), y: 390 },
-  { x: new Date('2026-07-05T06:00:00Z').getTime(), y: 380 },
-  { x: new Date('2026-07-06T06:00:00Z').getTime(), y: 370 },
-  { x: new Date('2026-07-07T06:00:00Z').getTime(), y: 363 },
-  { x: new Date('2026-07-08T06:00:00Z').getTime(), y: 358 },
-  { x: new Date('2026-07-09T06:00:00Z').getTime(), y: 355 },
-  { x: new Date('2026-07-10T06:00:00Z').getTime(), y: 353 },
+  { x: new Date('2026-07-01T04:00:00Z').getTime(), y: 400 },
+  { x: new Date('2026-07-02T04:00:00Z').getTime(), y: 450 },
+  { x: new Date('2026-07-03T04:00:00Z').getTime(), y: 420 },
+  { x: new Date('2026-07-04T04:00:00Z').getTime(), y: 405 },
+  { x: new Date('2026-07-05T04:00:00Z').getTime(), y: 390 },
+  { x: new Date('2026-07-06T04:00:00Z').getTime(), y: 382 },
+  { x: new Date('2026-07-07T04:00:00Z').getTime(), y: 375 },
+  { x: new Date('2026-07-08T04:00:00Z').getTime(), y: 370 },
+  { x: new Date('2026-07-09T04:00:00Z').getTime(), y: 365 },
+  { x: new Date('2026-07-10T04:00:00Z').getTime(), y: 360 },
+  { x: new Date('2026-07-11T04:00:00Z').getTime(), y: 355 },
 ];
-const hvzMaxauFcDate = '30 jun 2026 06:34';
+const hvzMaxauFcDate = '1 jul 2026 08:23';
 
 function downsample(arr, target) {
   if (!arr || arr.length === 0) return [];
